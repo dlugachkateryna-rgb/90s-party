@@ -23,6 +23,14 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
 <body>
 <canvas id="c"></canvas>
 <script>
+// ─── НАЛАШТУВАННЯ СПІЛЬНОГО РЕКОРДУ ───────────────────────────────────────────
+// Якщо хочеш рекорд між різними пристроями — вкажи URL свого n8n вебхука.
+// GET запит має повертати: {"score":123,"name":"Катя"}
+// POST запит приймає:      {"score":123,"name":"Катя"}  і зберігає якщо > поточного
+// Якщо залишити порожнім — рекорд зберігається в localStorage (тільки цей браузер)
+const SCORE_API = '';
+// ──────────────────────────────────────────────────────────────────────────────
+
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let W,H,GY,state='start',score=0,hi=0,spd=5.2,fr=0,gOff=0;
 let obs=[],nextObs=100,pendingSpawn=0,stars=[],particles=[];
@@ -30,22 +38,40 @@ let globalHi=0,globalHiName='',nameInputShown=false;
 const P={x:0,y:0,w:54,h:72,vy:0,onGnd:true};
 
 async function loadGlobalHi(){
-  try{const r=await window.storage.get('party_runner_hi',true);const d=JSON.parse(r.value);globalHi=d.score||0;globalHiName=d.name||'';}
-  catch(e){globalHi=0;globalHiName='';}
+  if(SCORE_API){
+    try{
+      var r=await fetch(SCORE_API);
+      var d=await r.json();
+      globalHi=d.score||0;globalHiName=d.name||'';
+      return;
+    }catch(e){}
+  }
+  try{
+    var d=JSON.parse(localStorage.getItem('party_runner_hi')||'{}');
+    globalHi=d.score||0;globalHiName=d.name||'';
+  }catch(e){globalHi=0;globalHiName='';}
 }
+
 async function saveGlobalHi(sc,nm){
-  try{await window.storage.set('party_runner_hi',JSON.stringify({score:sc,name:nm||'Анонім'}),true);}catch(e){}
+  if(SCORE_API){
+    try{
+      await fetch(SCORE_API,{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({score:sc,name:nm||'Анонім'})});
+    }catch(e){}
+  }
+  try{localStorage.setItem('party_runner_hi',JSON.stringify({score:sc,name:nm||'Анонім'}));}catch(e){}
 }
 
 function showNameInput(newScore){
   if(nameInputShown||document.getElementById('name-overlay'))return;
   nameInputShown=true;
-  const ov=document.createElement('div');ov.id='name-overlay';
+  var ov=document.createElement('div');ov.id='name-overlay';
   ov.innerHTML='<div id="name-box"><p class="nt">🏆 НОВИЙ РЕКОРД!</p><p class="nsc">'+newScore+'</p><p class="nsub">Введи своє ім\'я:</p><input id="hiName" type="text" maxlength="22" placeholder="Твоє ім\'я..." autocomplete="off"><button class="bsave" id="hiSave">Зберегти ✓</button><button class="bskip" id="hiSkip">Пропустити</button></div>';
   document.body.appendChild(ov);
-  const inp=document.getElementById('hiName');
-  setTimeout(()=>inp&&inp.focus(),120);
-  function submit(){const nm=inp.value.trim()||'Анонім';globalHi=newScore;globalHiName=nm;saveGlobalHi(newScore,nm);ov.remove();}
+  var inp=document.getElementById('hiName');
+  setTimeout(function(){if(inp)inp.focus();},120);
+  function submit(){var nm=inp.value.trim()||'Анонім';globalHi=newScore;globalHiName=nm;saveGlobalHi(newScore,nm);ov.remove();}
   function skip(){globalHi=newScore;globalHiName='';saveGlobalHi(newScore,'');ov.remove();}
   document.getElementById('hiSave').addEventListener('click',submit);
   document.getElementById('hiSkip').addEventListener('click',skip);
@@ -54,7 +80,7 @@ function showNameInput(newScore){
 
 function getDiff(){return Math.min(10,Math.floor(score/300));}
 function getSpd(){return Math.min(14,5.2+Math.pow(score/280,1.25)*0.75);}
-function getGap(){const d=getDiff();return Math.max(40,92-d*5.5)+Math.random()*Math.max(10,45-d*4);}
+function getGap(){var d=getDiff();return Math.max(40,92-d*5.5)+Math.random()*Math.max(10,45-d*4);}
 
 function resize(){
   W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;
@@ -113,7 +139,7 @@ function drawHUD(){
     ctx.font=fsHi+'px Impact,Arial';
     ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillText(label,W-15,78);
     ctx.fillStyle='#ffff00';ctx.fillText(label,W-16,76);
-  } else if(hi>0){
+  }else if(hi>0){
     ctx.font=fsHi+'px Impact,Arial';
     ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillText('HI '+hi,W-15,78);
     ctx.fillStyle='#ffff00';ctx.fillText('HI '+hi,W-16,76);
@@ -124,6 +150,7 @@ function drawHUD(){
   ctx.textAlign='left';
 }
 
+// ── FIX: drawStart properly closed ──
 function drawStart(){
   ctx.fillStyle='rgba(13,0,32,.65)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';
   var isM=W<540,fs1=Math.min(W*(isM?.16:.12),82),fs2=Math.min(W*(isM?.055:.045),30),t=Date.now()/1e3;
@@ -134,7 +161,7 @@ function drawStart(){
   if(globalHi>0){var rec=globalHiName?'👑 Рекорд: '+globalHiName+' — '+globalHi:'👑 Рекорд: '+globalHi;ctx.fillStyle='#ffff00';ctx.font=Math.min(W*.034,20)+'px Impact,Arial';ctx.fillText(rec,W/2,H*.55);}
 else{...ctx.fillText('Стрибай через перешкоди! Тримайся якомога довше.',W/2,H*.55);}
   ctx.textAlign='left';
-}
+} // ← drawStart закрита правильно
 
 function drawOver(){
   ctx.fillStyle='rgba(13,0,32,.9)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';
@@ -158,7 +185,7 @@ function drawOver(){
   var mid2=bx+bw/2;
   function cLine(text,yi,col,bold,fs){ctx.font=(bold?'bold ':' ')+fs+'px Impact,sans-serif';ctx.strokeStyle='#08001a';ctx.lineWidth=2;ctx.fillStyle=col;ctx.strokeText(text,mid2,yi);ctx.fillText(text,mid2,yi);}
   cLine('🎉 ЗАПРОШУЄМО НА ВЕЧІРКУ!',yL[0],'#ffff00',true,fsBig);
-  cLine('90-ті + Рік нашим вечіркам!',yL[1],'#ffffff',false,fsSm);
+  cLine('90-ті — Рік нашим вечіркам!',yL[1],'#ffffff',false,fsSm);
   cLine('📅  15 травня',yL[2],'#ff1493',false,fsSm);
   cLine('📍  Hatsorfim 29, Yaffo',yL[3],'#00ffff',false,fsSm);
   cLine('🕺  Тематика: 90-ті',yL[4],'#ffff00',false,fsSm);
@@ -177,7 +204,8 @@ function update(){
   if(pendingSpawn>0){pendingSpawn--;if(pendingSpawn===0)spawnSingle();}
   obs.forEach(function(o){o.x-=spd;});obs=obs.filter(function(o){return o.x>-110;});
   updateParts();
-  for(var i=0;i<obs.length;i++){if(hits(P,obs[i])){state='over';if(score>hi)hi=score;spawnParts(P.x+P.w/2,P.y+P.h/2,'death');if(score>globalHi)setTimeout(function(){showNameInput(score);},650);break;}}
+  var sc=score;
+  for(var i=0;i<obs.length;i++){if(hits(P,obs[i])){state='over';if(sc>hi)hi=sc;spawnParts(P.x+P.w/2,P.y+P.h/2,'death');if(sc>globalHi)setTimeout(function(){showNameInput(sc);},650);break;}}
 }
 
 function render(){ctx.clearRect(0,0,W,H);drawBG();drawGround();obs.forEach(drawObs);drawParts();drawPlayer();if(state==='playing')drawHUD();if(state==='start')drawStart();if(state==='over'){drawHUD();drawOver();}}
