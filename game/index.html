@@ -132,7 +132,7 @@ function drawStart(){
   ctx.fillStyle='#ffffff';ctx.strokeStyle='#1a0030';ctx.lineWidth=5;ctx.font='bold '+Math.min(W*(isM?.065:.055),38)+'px Impact,\'Arial Black\',sans-serif';ctx.strokeText('PARTY RUNNER',W/2,H*.46);ctx.fillText('PARTY RUNNER',W/2,H*.46);
   ctx.globalAlpha=.55+.45*Math.sin(t*2.5);ctx.fillStyle='#00ffff';ctx.strokeStyle='transparent';ctx.lineWidth=0;ctx.font=fs2+'px Impact,\'Arial Black\',sans-serif';ctx.fillText(isM?'👆 Натисни щоб почати':'👆 ПРОБІЛ щоб почати',W/2,H*.62);ctx.globalAlpha=1;
   if(globalHi>0){var rec=globalHiName?'👑 Рекорд: '+globalHiName+' — '+globalHi:'👑 Рекорд: '+globalHi;ctx.fillStyle='#ffff00';ctx.font=Math.min(W*.034,20)+'px Impact,Arial';ctx.fillText(rec,W/2,H*.72);}
-  else{ctx.fillStyle='rgba(255,255,255,.45)';ctx.font=Math.min(W*.03,18)+'px Impact,Arial';ctx.fillText('Стрибай через перешкоди! Тримайся якомога довше.', W/2, H - 40);
+  else{ctx.fillStyle='rgba(255,255,255,.45)';ctx.font=Math.min(W*.03,18)+'px Impact,Arial';ctx.fillText('Стрибай через перешкоди! Тримайся якомога довше.',W/2,H*.72);
   ctx.textAlign='left';
 }
 
