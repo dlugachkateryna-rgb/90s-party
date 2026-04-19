@@ -158,13 +158,13 @@ function drawOver(){
   var mid2=bx+bw/2;
   function cLine(text,yi,col,bold,fs){ctx.font=(bold?'bold ':' ')+fs+'px Impact,sans-serif';ctx.strokeStyle='#08001a';ctx.lineWidth=2;ctx.fillStyle=col;ctx.strokeText(text,mid2,yi);ctx.fillText(text,mid2,yi);}
   cLine('🎉 ЗАПРОШУЄМО НА ВЕЧІРКУ!',yL[0],'#ffff00',true,fsBig);
-  cLine('90-ті — Рік нашим вечіркам!',yL[1],'#ffffff',false,fsSm);
+  cLine('90-ті + Рік нашим вечіркам!',yL[1],'#ffffff',false,fsSm);
   cLine('📅  15 травня',yL[2],'#ff1493',false,fsSm);
   cLine('📍  Hatsorfim 29, Yaffo',yL[3],'#00ffff',false,fsSm);
   cLine('🕺  Тематика: 90-ті',yL[4],'#ffff00',false,fsSm);
   ctx.globalAlpha=.5+.5*Math.sin(t*2.8);ctx.fillStyle='#fff';ctx.strokeStyle='transparent';ctx.lineWidth=0;
   ctx.font=Math.max(13,Math.min(W*.033,19))+'px Impact,sans-serif';
-  ctx.fillText(isM?'👆 ТАП — грати ще раз':'👆 ТАП або ПРОБІЛ — грати ще раз',W/2,H*.93);
+  ctx.fillText(isM?'👆 Натисни на екран щоб грати ще раз':'👆 ПРОБІЛ — грати ще раз',W/2,H*.93);
   ctx.globalAlpha=1;ctx.textAlign='left';
 }
 
